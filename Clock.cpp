@@ -1,4 +1,4 @@
-﻿#include <graphics.h>
+#include <graphics.h>
 #include <iostream>
 #include <conio.h>
 #include "class.h"
@@ -77,7 +77,9 @@ int main()
             string alarmInfo = alarms[i].getName() + " " + 
                               to_string(alarms[i].getHour()) + ":" + 
                               (alarms[i].getMinute() < 10 ? "0" : "") + 
-                              to_string(alarms[i].getMinute()) + 
+                              to_string(alarms[i].getMinute()) + ":" +
+                              (alarms[i].getSecond() < 10 ? "0" : "") + 
+                              to_string(alarms[i].getSecond()) +
                               " (等级:" + to_string(alarms[i].getLevel()) + ")";
             
             TCHAR wAlarmInfo[256] = {};
@@ -155,7 +157,7 @@ int main()
              hour.point_to_dgree(hour_angle + (0.5 * t.tm_min) + (t.tm_sec / 120.0), t.tm_hour);
         }
 
-        Sleep(1000);
+        Sleep(100); // 从1000改为100以提高检查频率，支持秒级精度
     }
     _getch();
     closegraph();
@@ -172,13 +174,25 @@ void checkAndTriggerAlarms() {
     
     int currentHour = t.tm_hour;
     int currentMinute = t.tm_min;
+    int currentSecond = t.tm_sec;
     
     // 遍历所有闹钟
     for (size_t i = 0; i < alarms.size(); i++) {
-        // 检查时间是否匹配
-        if (alarms[i].getHour() == currentHour && alarms[i].getMinute() == currentMinute) {
+        // 检查时间是否匹配且闹钟尚未触发
+        if (alarms[i].getHour() == currentHour && 
+            alarms[i].getMinute() == currentMinute && 
+            alarms[i].getSecond() == currentSecond &&
+            !alarms[i].isTriggered()) {
+            // 标记闹钟已触发
+            alarms[i].setTriggered(true);
             // 触发闹钟通知
             sendToastNotification(alarms[i].getName());
+        }
+        // 如果时间不匹配，则重置触发状态
+        else if (alarms[i].getHour() != currentHour || 
+                 alarms[i].getMinute() != currentMinute ||
+                 alarms[i].getSecond() != currentSecond) {
+            alarms[i].setTriggered(false);
         }
     }
 }

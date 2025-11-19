@@ -85,18 +85,24 @@ private:
 	string name;
 	int hour;
 	int minute;
+	int second; // 新增：秒字段
 	int level; // 闹钟等级 1-3
+	bool triggered; // 用于跟踪闹钟是否已触发
 
 public:
-	Alarm(const string& name, int hour, int minute, int level);
+	Alarm(const string& name, int hour, int minute, int second, int level);
 	string getName() const;
 	int getHour() const;
 	int getMinute() const;
+	int getSecond() const; // 新增：获取秒
 	int getLevel() const;
 	void setName(const string& newName);
 	void setHour(int newHour);
 	void setMinute(int newMinute);
+	void setSecond(int newSecond); // 新增：设置秒
 	void setLevel(int newLevel);
+	bool isTriggered() const;
+	void setTriggered(bool state);
 };
 
 #pragma once

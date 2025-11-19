@@ -1,4 +1,4 @@
-﻿#include "class.h"
+#include "class.h"
 #include "globals.h"
 #include <graphics.h>
 #include <conio.h>
@@ -154,8 +154,8 @@ void Button::setColors(COLORREF bgColorIn, COLORREF textColorIn)
 }
 
 // Alarm类的实现
-Alarm::Alarm(const string& name, int hour, int minute, int level) 
-	: name(name), hour(hour), minute(minute), level(level) {}
+Alarm::Alarm(const string& name, int hour, int minute, int second, int level) 
+	: name(name), hour(hour), minute(minute), second(second), level(level), triggered(false) {}
 
 string Alarm::getName() const {
 	return name;
@@ -167,6 +167,10 @@ int Alarm::getHour() const {
 
 int Alarm::getMinute() const {
 	return minute;
+}
+
+int Alarm::getSecond() const {
+	return second;
 }
 
 int Alarm::getLevel() const {
@@ -185,8 +189,20 @@ void Alarm::setMinute(int newMinute) {
 	minute = newMinute;
 }
 
+void Alarm::setSecond(int newSecond) {
+	second = newSecond;
+}
+
 void Alarm::setLevel(int newLevel) {
 	level = newLevel;
+}
+
+bool Alarm::isTriggered() const {
+	return triggered;
+}
+
+void Alarm::setTriggered(bool state) {
+	triggered = state;
 }
 
 // TextInput类的实现
@@ -300,8 +316,9 @@ void showAddAlarmDialog() {
 
     // 创建界面元素
     TextInput nameInput(dialogX + 20, dialogY + 40, 260, 30, "闹钟名称");
-    TextInput hourInput(dialogX + 20, dialogY + 90, 100, 30, "小时 (0-23)");
-    TextInput minuteInput(dialogX + 140, dialogY + 90, 100, 30, "分钟 (0-59)");
+    TextInput hourInput(dialogX + 20, dialogY + 90, 80, 30, "小时 (0-23)");
+    TextInput minuteInput(dialogX + 110, dialogY + 90, 80, 30, "分钟 (0-59)");
+    TextInput secondInput(dialogX + 200, dialogY + 90, 80, 30, "秒 (0-59)");
 
     // 等级选择 (简化为按钮形式)
     int selectedLevel = 1;
@@ -322,6 +339,7 @@ void showAddAlarmDialog() {
     nameInput.draw();
     hourInput.draw();
     minuteInput.draw();
+    secondInput.draw();
 
     level1Btn.draw();
     level2Btn.draw();
@@ -347,6 +365,7 @@ void showAddAlarmDialog() {
                 nameInput.handleClick(msg.x, msg.y);
                 hourInput.handleClick(msg.x, msg.y);
                 minuteInput.handleClick(msg.x, msg.y);
+                secondInput.handleClick(msg.x, msg.y);
 
                 // 处理等级按钮点击
                 bool levelChanged = false;
@@ -385,15 +404,16 @@ void showAddAlarmDialog() {
                     string name = nameInput.getText();
                     if (!name.empty()) {
                         // 解析时间输入
-                        int hour = 0, minute = 0;
+                        int hour = 0, minute = 0, second = 0;
                         try {
                             // 简化处理，实际应进行更严格的验证
                             if (!hourInput.getText().empty()) hour = stoi(hourInput.getText());
                             if (!minuteInput.getText().empty()) minute = stoi(minuteInput.getText());
+                            if (!secondInput.getText().empty()) second = stoi(secondInput.getText());
 
-                            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59) {
                                 // 添加到闹钟列表
-                                alarms.emplace_back(name, hour, minute, selectedLevel);
+                                alarms.emplace_back(name, hour, minute, second, selectedLevel);
                                 cout << "闹钟添加成功" << endl;
                             }
                         }
@@ -412,11 +432,13 @@ void showAddAlarmDialog() {
                 nameInput.handleInput((char)msg.wParam);
                 hourInput.handleInput((char)msg.wParam);
                 minuteInput.handleInput((char)msg.wParam);
+                secondInput.handleInput((char)msg.wParam);
 
                 // 更新显示
                 nameInput.draw();
                 hourInput.draw();
                 minuteInput.draw();
+                secondInput.draw();
             }
         }
 
@@ -476,7 +498,7 @@ void showDeleteAlarmDialog(int alarmIndex) {
 
     Button cancelBtn(dialogX + 170, dialogY + 90, 80, 30, "取消", [&]() {
         // 取消操作
-    });
+    }); 
 
     // 绘制按钮
     confirmBtn.draw();
