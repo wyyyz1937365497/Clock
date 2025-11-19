@@ -222,8 +222,22 @@ void checkAndTriggerAlarms()
         {
             // 标记闹钟已触发
             alarms[i].setTriggered(true);
-            // 触发闹钟通知
-            sendToastNotification(alarms[i].getName());
+            switch (alarms[i].getLevel())
+            {
+                case 1:
+
+                    break;
+                case 2:
+
+                    break;
+                case 3:
+
+                    break;
+                
+            default:
+                break;
+            }
+            cout << "alarmed" << endl;
         }
         // 如果时间不匹配，则重置触发状态
         else if (alarms[i].getHour() != currentHour ||
@@ -235,36 +249,3 @@ void checkAndTriggerAlarms()
     }
 }
 
-// 发送Windows Toast通知
-void sendToastNotification(const string &alarmName)
-{
-    try
-    {
-        // 构造Toast通知XML
-        string xml = "<toast>"
-                     "<visual>"
-                     "<binding template='ToastGeneric'>"
-                     "<text>闹钟提醒</text>"
-                     "<text>闹钟 \"" +
-                     alarmName + "\" 时间到了!</text>"
-                                 "</binding>"
-                                 "</visual>"
-                                 "</toast>";
-
-        // 创建XML文档
-        XmlDocument doc;
-        doc.LoadXml(winrt::to_hstring(xml));
-
-        // 创建Toast通知
-        ToastNotification toast(doc);
-
-        // 创建通知管理器并显示通知
-        ToastNotifier notifier = ToastNotificationManager::CreateToastNotifier(L"ClockApp");
-        notifier.Show(toast);
-    }
-    catch (...)
-    {
-        // 如果无法发送Toast通知，则在控制台输出信息
-        cout << "闹钟 \"" << alarmName << "\" 时间到了!" << endl;
-    }
-}
