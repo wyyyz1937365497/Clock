@@ -5,7 +5,7 @@
 #include <thread>
 #include <future>
 #include "class.h"
-using namespace  std;
+using namespace std;
 double norm_angle(double a)
 {
     a = fmod(a, 360.0);
@@ -48,7 +48,7 @@ void sdf_pie_mt(int cx, int cy, int r, double start_deg, double end_deg, COLORRE
         int y_end = top + ((t + 1) * h) / n_threads - 1;
         y_end = min(y_end, bottom);
         futures.push_back(async(launch::async, [=, &buffer]()
-            {
+                                {
                 BYTE fg_r = GetRValue(fill_color);
                 BYTE fg_g = GetGValue(fill_color);
                 BYTE fg_b = GetBValue(fill_color);
@@ -83,7 +83,7 @@ void sdf_pie_mt(int cx, int cy, int r, double start_deg, double end_deg, COLORRE
                     }
                 } }));
     }
-    for (auto& fut : futures)
+    for (auto &fut : futures)
     {
         fut.wait();
     }
@@ -92,7 +92,8 @@ void sdf_pie_mt(int cx, int cy, int r, double start_deg, double end_deg, COLORRE
         for (int x = 0; x < w; ++x)
         {
             COLORREF c = buffer[y * w + x];
-            if (c != 0) {
+            if (c != 0)
+            {
                 putpixel(x, y, c);
             }
         }
