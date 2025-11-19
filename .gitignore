@@ -1,0 +1,6 @@
+.vs/
+.vscode/
+Clock/
+x64/
+*.pdb
+*.obj
