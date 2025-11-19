@@ -1,11 +1,22 @@
-#include <graphics.h>
+﻿#include <graphics.h>
 #include <iostream>
 #include <conio.h>
 #include "class.h"
 #include "globals.h"
 #include <time.h>
 #include <vector>
+
+// 添加Windows API相关头文件
+#include <windows.h>
+#include <winrt/Windows.Data.Xml.Dom.h>
+#include <winrt/Windows.UI.Notifications.h>
+#include <winrt/Windows.ApplicationModel.Background.h>
+#include <winrt/Windows.Foundation.h>
+
 using namespace std;
+using namespace winrt;
+using namespace Windows::Data::Xml::Dom;
+using namespace Windows::UI::Notifications;
 
 // 定义全局变量
 bool issdf = false;
@@ -14,6 +25,8 @@ vector<Alarm> alarms;
 // 函数声明
 void showAddAlarmDialog();
 void showDeleteAlarmDialog(int alarmIndex);
+void checkAndTriggerAlarms();
+void sendToastNotification(const string& alarmName);
 
 int main()
 {
@@ -24,6 +37,9 @@ int main()
     Pin second(400, 400, 300, RGB(255, 0, 0));
     Pin minute(400, 400, 225, RGB(0, 0, 255));
     Pin hour(400, 400, 150, RGB(0, 255, 0));
+    
+    // 初始化COM
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     
     // 创建切换按钮
     Button toggleButton(10, 10, 80, 40, "切换", []() {
@@ -72,6 +88,9 @@ int main()
 #endif
             outtextxy(820, 100 + (int)i * 25, wAlarmInfo);
         }
+        
+        // 检查是否有闹钟需要触发
+        checkAndTriggerAlarms();
         
         // 处理鼠标消息
         ExMessage msg;
@@ -140,85 +159,56 @@ int main()
     }
     _getch();
     closegraph();
+    CoUninitialize(); // 清理COM
     return 0;
 }
 
-// 删除闹钟确认对话框
-void showDeleteAlarmDialog(int alarmIndex) {
-    // 保存当前屏幕内容
-    IMAGE backup;
-    getimage(&backup, 0, 0, 1000, 800);
-
-    // 绘制半透明遮罩层
-    IMAGE mask(1000, 800);
-    getimage(&mask, 0, 0, 1000, 800);
-    DWORD* pMaskBuffer = GetImageBuffer(&mask);
-    for (int i = 0; i < 1000 * 800; ++i) {
-        DWORD color = pMaskBuffer[i];
-        BYTE r = GetRValue(color) / 2;
-        BYTE g = GetGValue(color) / 2;
-        BYTE b = GetBValue(color) / 2;
-        pMaskBuffer[i] = RGB(r, g, b);
-    }
-    putimage(0, 0, &mask);
-
-    // 对话框参数
-    const int dialogWidth = 300;
-    const int dialogHeight = 150;
-    const int dialogX = (1000 - dialogWidth) / 2;
-    const int dialogY = (800 - dialogHeight) / 2;
-
-    // 绘制对话框背景
-    setfillcolor(RGB(30, 30, 40));
-    fillrectangle(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
-
-    // 绘制对话框边框
-    setlinecolor(WHITE);
-    rectangle(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
-
-    // 提示信息
-    settextcolor(WHITE);
-    setbkmode(TRANSPARENT);
-    TCHAR message[256] = {};
-    _stprintf_s(message, _countof(message), _T("确定要删除闹钟 \"%hs\" 吗?"), alarms[alarmIndex].getName().c_str());
-    outtextxy(dialogX + 20, dialogY + 30, message);
-
-    // 创建按钮
-    bool confirmed = false;
-    Button confirmBtn(dialogX + 50, dialogY + 90, 80, 30, "确认", [&]() {
-        confirmed = true;
-    });
-
-    Button cancelBtn(dialogX + 170, dialogY + 90, 80, 30, "取消", [&]() {
-        // 取消操作
-    });
-
-    // 绘制按钮
-    confirmBtn.draw();
-    cancelBtn.draw();
-
-    // 等待用户操作
-    ExMessage msg;
-    bool running = true;
-
-    while (running) {
-        while (peekmessage(&msg)) {
-            if (msg.message == WM_LBUTTONDOWN) {
-                if (confirmBtn.checkClick(msg.x, msg.y)) {
-                    // 删除闹钟
-                    alarms.erase(alarms.begin() + alarmIndex);
-                    running = false;
-                }
-
-                if (cancelBtn.checkClick(msg.x, msg.y)) {
-                    running = false;
-                }
-            }
+// 检查并触发闹钟
+void checkAndTriggerAlarms() {
+    time_t now;
+    time(&now);
+    struct tm t;
+    localtime_s(&t, &now);
+    
+    int currentHour = t.tm_hour;
+    int currentMinute = t.tm_min;
+    
+    // 遍历所有闹钟
+    for (size_t i = 0; i < alarms.size(); i++) {
+        // 检查时间是否匹配
+        if (alarms[i].getHour() == currentHour && alarms[i].getMinute() == currentMinute) {
+            // 触发闹钟通知
+            sendToastNotification(alarms[i].getName());
         }
-        Sleep(50);
     }
+}
 
-    // 恢复原始屏幕内容
-    putimage(0, 0, &backup);
-    cleardevice(); // 强制刷新屏幕
+// 发送Windows Toast通知
+void sendToastNotification(const string& alarmName) {
+    try {
+        // 构造Toast通知XML
+        string xml = "<toast>"
+                     "<visual>"
+                     "<binding template='ToastGeneric'>"
+                     "<text>闹钟提醒</text>"
+                     "<text>闹钟 \"" + alarmName + "\" 时间到了!</text>"
+                     "</binding>"
+                     "</visual>"
+                     "</toast>";
+        
+        // 创建XML文档
+        XmlDocument doc;
+        doc.LoadXml(winrt::to_hstring(xml));
+        
+        // 创建Toast通知
+        ToastNotification toast(doc);
+        
+        // 创建通知管理器并显示通知
+        ToastNotifier notifier = ToastNotificationManager::CreateToastNotifier(L"ClockApp");
+        notifier.Show(toast);
+    }
+    catch (...) {
+        // 如果无法发送Toast通知，则在控制台输出信息
+        cout << "闹钟 \"" << alarmName << "\" 时间到了!" << endl;
+    }
 }

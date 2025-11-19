@@ -427,3 +427,84 @@ void showAddAlarmDialog() {
     // 恢复原始屏幕内容
     putimage(0, 0, &backup);
 }
+
+// 删除闹钟确认对话框
+void showDeleteAlarmDialog(int alarmIndex) {
+    // 保存当前屏幕内容
+    IMAGE backup;
+    getimage(&backup, 0, 0, 1000, 800);
+
+    // 绘制半透明遮罩层
+    IMAGE mask(1000, 800);
+    getimage(&mask, 0, 0, 1000, 800);
+    DWORD* pMaskBuffer = GetImageBuffer(&mask);
+    for (int i = 0; i < 1000 * 800; ++i) {
+        DWORD color = pMaskBuffer[i];
+        BYTE r = GetRValue(color) / 2;
+        BYTE g = GetGValue(color) / 2;
+        BYTE b = GetBValue(color) / 2;
+        pMaskBuffer[i] = RGB(r, g, b);
+    }
+    putimage(0, 0, &mask);
+
+    // 对话框参数
+    const int dialogWidth = 300;
+    const int dialogHeight = 150;
+    const int dialogX = (1000 - dialogWidth) / 2;
+    const int dialogY = (800 - dialogHeight) / 2;
+
+    // 绘制对话框背景
+    setfillcolor(RGB(30, 30, 40));
+    fillrectangle(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
+
+    // 绘制对话框边框
+    setlinecolor(WHITE);
+    rectangle(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
+
+    // 提示信息
+    settextcolor(WHITE);
+    setbkmode(TRANSPARENT);
+    TCHAR message[256] = {};
+    _stprintf_s(message, _countof(message), _T("确定要删除闹钟 \"%hs\" 吗?"), alarms[alarmIndex].getName().c_str());
+    outtextxy(dialogX + 20, dialogY + 30, message);
+
+    // 创建按钮
+    bool confirmed = false;
+    Button confirmBtn(dialogX + 50, dialogY + 90, 80, 30, "确认", [&]() {
+        confirmed = true;
+    });
+
+    Button cancelBtn(dialogX + 170, dialogY + 90, 80, 30, "取消", [&]() {
+        // 取消操作
+    });
+
+    // 绘制按钮
+    confirmBtn.draw();
+    cancelBtn.draw();
+
+    // 等待用户操作
+    ExMessage msg;
+    bool running = true;
+
+    while (running) {
+        while (peekmessage(&msg)) {
+            if (msg.message == WM_LBUTTONDOWN) {
+                if (confirmBtn.checkClick(msg.x, msg.y)) {
+                    // 删除闹钟
+                    alarms.erase(alarms.begin() + alarmIndex);
+                    running = false;
+                    Sleep(100); // 点击确认后等待0.1秒
+                }
+
+                if (cancelBtn.checkClick(msg.x, msg.y)) {
+                    running = false;
+                }
+            }
+        }
+        Sleep(50);
+    }
+
+    // 恢复原始屏幕内容
+    putimage(0, 0, &backup);
+    cleardevice(); // 强制刷新屏幕
+}
