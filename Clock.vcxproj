@@ -125,7 +125,7 @@
   <ItemGroup>
     <ClCompile Include="Clock.cpp" />
     <ClCompile Include="funcation.cpp" />
-    <ClCompile Include="globals.cpp" />
+    <ClCompile Include="globals.h" />
     <ClCompile Include="sdf.cpp" />
   </ItemGroup>
   <ItemGroup>

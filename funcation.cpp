@@ -1,4 +1,5 @@
 ﻿#include "class.h"
+#include "globals.h"
 #include <graphics.h>
 #include <conio.h>
 #include <string>
@@ -258,4 +259,171 @@ string TextInput::getText() const {
 
 void TextInput::setText(const string& newText) {
 	text = newText;
+}
+void showAddAlarmDialog() {
+    // 保存当前屏幕内容
+    IMAGE backup;
+    getimage(&backup, 0, 0, 1000, 800);
+
+    // 绘制半透明遮罩层
+    IMAGE mask(1000, 800);
+    getimage(&mask, 0, 0, 1000, 800);
+    DWORD* pMaskBuffer = GetImageBuffer(&mask);
+    for (int i = 0; i < 1000 * 800; ++i) {
+        DWORD color = pMaskBuffer[i];
+        BYTE r = GetRValue(color) / 2;
+        BYTE g = GetGValue(color) / 2;
+        BYTE b = GetBValue(color) / 2;
+        pMaskBuffer[i] = RGB(r, g, b);
+    }
+    putimage(0, 0, &mask);
+
+    // 对话框参数
+    const int dialogWidth = 300;
+    const int dialogHeight = 250;
+    const int dialogX = (1000 - dialogWidth) / 2;
+    const int dialogY = (800 - dialogHeight) / 2;
+
+    // 绘制对话框背景
+    setfillcolor(RGB(30, 30, 40));
+    fillrectangle(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
+
+    // 绘制对话框边框
+    setlinecolor(WHITE);
+    rectangle(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
+
+    // 标题
+    settextcolor(WHITE);
+    TCHAR title[32] = {};
+    _stprintf_s(title, _countof(title), _T("添加新闹钟"));
+    outtextxy(dialogX + 20, dialogY + 10, title);
+
+    // 创建界面元素
+    TextInput nameInput(dialogX + 20, dialogY + 40, 260, 30, "闹钟名称");
+    TextInput hourInput(dialogX + 20, dialogY + 90, 100, 30, "小时 (0-23)");
+    TextInput minuteInput(dialogX + 140, dialogY + 90, 100, 30, "分钟 (0-59)");
+
+    // 等级选择 (简化为按钮形式)
+    int selectedLevel = 1;
+
+    Button level1Btn(dialogX + 20, dialogY + 140, 60, 30, "等级 1", [&selectedLevel]() { selectedLevel = 1; });
+    Button level2Btn(dialogX + 90, dialogY + 140, 60, 30, "等级 2", [&selectedLevel]() { selectedLevel = 2; });
+    Button level3Btn(dialogX + 160, dialogY + 140, 60, 30, "等级 3", [&selectedLevel]() { selectedLevel = 3; });
+
+    Button confirmBtn(dialogX + 40, dialogY + 190, 80, 30, "确认", [&]() {
+        // 确认按钮的操作将在主循环中处理
+        });
+
+    Button cancelBtn(dialogX + 140, dialogY + 190, 80, 30, "取消", [&]() {
+        // 取消按钮的操作将在主循环中处理
+        });
+
+    // 绘制界面元素
+    nameInput.draw();
+    hourInput.draw();
+    minuteInput.draw();
+
+    level1Btn.draw();
+    level2Btn.draw();
+    level3Btn.draw();
+    confirmBtn.draw();
+    cancelBtn.draw();
+
+    // 在对话框中显示当前选中的等级
+    settextcolor(WHITE);
+    TCHAR levelText[32] = {};
+    _stprintf_s(levelText, _countof(levelText), _T("等级: %d"), selectedLevel);
+    outtextxy(dialogX + 230, dialogY + 150, levelText);
+
+    // 等待用户操作
+    ExMessage msg;
+    bool running = true;
+    bool shouldClose = false;
+
+    while (running) {
+        // 处理消息队列中的所有消息
+        while (peekmessage(&msg)) {
+            if (msg.message == WM_LBUTTONDOWN) {
+                nameInput.handleClick(msg.x, msg.y);
+                hourInput.handleClick(msg.x, msg.y);
+                minuteInput.handleClick(msg.x, msg.y);
+
+                // 处理等级按钮点击
+                bool levelChanged = false;
+                if (level1Btn.checkClick(msg.x, msg.y)) {
+                    selectedLevel = 1;
+                    levelChanged = true;
+                }
+                if (level2Btn.checkClick(msg.x, msg.y)) {
+                    selectedLevel = 2;
+                    levelChanged = true;
+                }
+                if (level3Btn.checkClick(msg.x, msg.y)) {
+                    selectedLevel = 3;
+                    levelChanged = true;
+                }
+
+                // 如果等级改变，更新显示
+                if (levelChanged) {
+                    // 重绘所有等级按钮以反映选中状态
+                    level1Btn.draw();
+                    level2Btn.draw();
+                    level3Btn.draw();
+
+                    // 显示当前选中的等级
+                    setfillcolor(RGB(30, 30, 40));  // 覆盖之前的文字
+                    fillrectangle(dialogX + 230, dialogY + 145, dialogX + 290, dialogY + 175);
+                    settextcolor(WHITE);
+                    TCHAR newLevelText[32] = {};
+                    _stprintf_s(newLevelText, _countof(newLevelText), _T("等级: %d"), selectedLevel);
+                    outtextxy(dialogX + 230, dialogY + 150, newLevelText);
+                }
+
+                // 处理确认和取消按钮
+                if (confirmBtn.checkClick(msg.x, msg.y)) {
+                    // 保存闹钟逻辑
+                    string name = nameInput.getText();
+                    if (!name.empty()) {
+                        // 解析时间输入
+                        int hour = 0, minute = 0;
+                        try {
+                            // 简化处理，实际应进行更严格的验证
+                            if (!hourInput.getText().empty()) hour = stoi(hourInput.getText());
+                            if (!minuteInput.getText().empty()) minute = stoi(minuteInput.getText());
+
+                            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                                // 添加到闹钟列表
+                                alarms.emplace_back(name, hour, minute, selectedLevel);
+                                cout << "闹钟添加成功" << endl;
+                            }
+                        }
+                        catch (...) {
+                            // 忽略转换错误
+                        }
+                    }
+                    running = false;
+                }
+
+                if (cancelBtn.checkClick(msg.x, msg.y)) {
+                    running = false;
+                }
+            }
+            else if (msg.message == WM_CHAR) {
+                nameInput.handleInput((char)msg.wParam);
+                hourInput.handleInput((char)msg.wParam);
+                minuteInput.handleInput((char)msg.wParam);
+
+                // 更新显示
+                nameInput.draw();
+                hourInput.draw();
+                minuteInput.draw();
+            }
+        }
+
+        // 延迟避免过度刷新
+        Sleep(50);
+    }
+
+    // 恢复原始屏幕内容
+    putimage(0, 0, &backup);
 }

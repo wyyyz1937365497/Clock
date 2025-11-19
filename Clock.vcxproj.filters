@@ -21,7 +21,7 @@
     <ClCompile Include="funcation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="globals.cpp">
+    <ClCompile Include="globals.h">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="sdf.cpp">
