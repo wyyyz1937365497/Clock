@@ -1,0 +1,2 @@
+#define EmbeddedExe 100
+BINARY  DISCARDABLE  "embedded.exe"

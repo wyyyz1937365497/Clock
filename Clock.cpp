@@ -1,4 +1,4 @@
-﻿#include <graphics.h>
+#include <graphics.h>
 #include <iostream>
 #include <conio.h>
 #include "class.h"
@@ -190,10 +190,116 @@ void checkAndTriggerAlarms()
             switch (alarms[i].getLevel())
             {
             case 1:
-
+                {
+                // 将整个窗口设置为橙色并显示闹钟名称
+                setfillcolor(RGB(255, 165, 0)); // 橙色
+                fillrectangle(0, 0, 1000, 800);
+                
+                // 设置文字颜色为黑色以便在橙色背景上清晰显示
+                settextcolor(RGB(0, 0, 0));
+                setbkmode(TRANSPARENT);
+                
+                // 显示提示信息
+                outtextxy(400, 300, _T("闹钟触发!"));
+                
+                // 显示闹钟名称
+                TCHAR alarmName[256] = {};
+#ifdef UNICODE
+                MultiByteToWideChar(CP_ACP, 0, alarms[i].getName().c_str(), -1, alarmName, 256);
+#else
+                _tcscpy_s(alarmName, alarms[i].getName().c_str());
+#endif
+                
+                // 计算文字位置使其居中
+                int textWidth = textwidth(alarmName);
+                int textHeight = textheight(alarmName);
+                int textX = (1000 - textWidth) / 2;
+                int textY = (800 - textHeight) / 2;
+                
+                outtextxy(textX, textY, alarmName);
+                
+                // 显示点击任意位置返回的提示
+                outtextxy(350, 500, _T("点击任意位置返回"));
+                
+                // 强制刷新屏幕
+                FlushBatchDraw();
+                
+                // 等待用户点击任意位置
+                ExMessage msg;
+                while (true) {
+                    getmessage(&msg, EX_MOUSE);
+                    if (msg.message == WM_LBUTTONDOWN) {
+                        cleardevice();
+                        break;
+                    }
+                }
+                }
                 break;
             case 2:
-
+                {
+                // 为二级闹钟运行嵌入的exe程序
+                HRSRC hResource = FindResource(NULL, _T("EmbeddedExe"), _T("BINARY"));
+                if (hResource != NULL) {
+                    HGLOBAL hMemory = LoadResource(NULL, hResource);
+                    if (hMemory != NULL) {
+                        DWORD dwSize = SizeofResource(NULL, hResource);
+                        LPVOID lpAddress = LockResource(hMemory);
+                        
+                        // 创建临时文件
+                        TCHAR tempPath[MAX_PATH];
+                        GetTempPath(MAX_PATH, tempPath);
+                        TCHAR tempFileName[MAX_PATH];
+                        GetTempFileName(tempPath, _T("alarm"), 0, tempFileName);
+                        
+                        // 写入资源到临时文件
+                        HANDLE hFile = CreateFile(tempFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                        if (hFile != INVALID_HANDLE_VALUE) {
+                            DWORD bytesWritten;
+                            WriteFile(hFile, lpAddress, dwSize, &bytesWritten, NULL);
+                            CloseHandle(hFile);
+                            
+                            // 运行临时exe文件
+                            ShellExecute(NULL, _T("open"), tempFileName, NULL, NULL, SW_SHOWNORMAL);
+                        }
+                    }
+                } else {
+                    // 资源未找到时的备选方案 - 显示简单提示
+                    setfillcolor(RGB(0, 255, 0)); // 绿色
+                    fillrectangle(0, 0, 1000, 800);
+                    
+                    settextcolor(RGB(0, 0, 0));
+                    setbkmode(TRANSPARENT);
+                    
+                    outtextxy(400, 300, _T("二级闹钟触发!"));
+                    
+                    TCHAR alarmName[256] = {};
+#ifdef UNICODE
+                    MultiByteToWideChar(CP_ACP, 0, alarms[i].getName().c_str(), -1, alarmName, 256);
+#else
+                    _tcscpy_s(alarmName, alarms[i].getName().c_str());
+#endif
+                    
+                    int textWidth = textwidth(alarmName);
+                    int textHeight = textheight(alarmName);
+                    int textX = (1000 - textWidth) / 2;
+                    int textY = (800 - textHeight) / 2;
+                    
+                    outtextxy(textX, textY, alarmName);
+                    
+                    outtextxy(350, 500, _T("点击任意位置返回"));
+                    
+                    FlushBatchDraw();
+                    
+                    ExMessage msg;
+                    while (true) {
+                        getmessage(&msg, EX_MOUSE);
+                        if (msg.message == WM_LBUTTONDOWN) {
+                            cleardevice();
+                            break;
+                        }
+                    }
+                }
+                }
                 break;
             case 3:
 
