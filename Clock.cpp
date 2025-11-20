@@ -6,17 +6,7 @@
 #include <time.h>
 #include <vector>
 
-// 添加Windows API相关头文件
-#include <windows.h>
-#include <winrt/Windows.Data.Xml.Dom.h>
-#include <winrt/Windows.UI.Notifications.h>
-#include <winrt/Windows.ApplicationModel.Background.h>
-#include <winrt/Windows.Foundation.h>
-
 using namespace std;
-using namespace winrt;
-using namespace Windows::Data::Xml::Dom;
-using namespace Windows::UI::Notifications;
 
 // 定义全局变量
 bool issdf = false;
@@ -25,7 +15,6 @@ vector<Alarm> alarms;
 // 函数声明
 void showAddAlarmDialog();
 void checkAndTriggerAlarms();
-void sendToastNotification(const string &alarmName);
 
 int main()
 {
@@ -36,10 +25,6 @@ int main()
     Pin second(400, 400, 300, RGB(255, 0, 0));
     Pin minute(400, 400, 225, RGB(0, 0, 255));
     Pin hour(400, 400, 150, RGB(0, 255, 0));
-
-    // 初始化COM
-    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-
     // 创建切换按钮
     Button toggleButton(10, 10, 80, 40, "切换", []()
                         { issdf = !issdf; });
@@ -102,11 +87,16 @@ int main()
                 if (toggleButton.checkClick(msg.x, msg.y))
                 {
                     cout << "切换按钮被点击" << endl;
+                    dial.refresh();
+                    // 刷新issdf状态显示区域
+                    setfillcolor(BLACK);
+                    fillrectangle(100, 20, 200, 40);
                 }
 
                 if (addAlarmButton.checkClick(msg.x, msg.y))
                 {
                     cout << "创建闹钟按钮" << endl;
+                    dial.refresh();
                 }
 
                 // 检查闹钟列表项点击
@@ -190,8 +180,54 @@ void checkAndTriggerAlarms()
             switch (alarms[i].getLevel())
             {
             case 1:
+            {
+                // 将整个窗口设置为橙色并显示闹钟名称
+                setfillcolor(RGB(255, 165, 0)); // 橙色
+                fillrectangle(0, 0, 1000, 800);
 
-                break;
+                // 设置文字颜色为黑色以便在橙色背景上清晰显示
+                settextcolor(RGB(0, 0, 0));
+                setbkmode(TRANSPARENT);
+
+                // 显示提示信息
+                outtextxy(400, 300, _T("闹钟触发!"));
+
+                // 显示闹钟名称
+                TCHAR alarmName[256] = {};
+#ifdef UNICODE
+                MultiByteToWideChar(CP_ACP, 0, alarms[i].getName().c_str(), -1, alarmName, 256);
+#else
+                _tcscpy_s(alarmName, alarms[i].getName().c_str());
+#endif
+
+                // 计算文字位置使其居中
+                int textWidth = textwidth(alarmName);
+                int textHeight = textheight(alarmName);
+                int textX = (1000 - textWidth) / 2;
+                int textY = (800 - textHeight) / 2;
+
+                outtextxy(textX, textY, alarmName);
+
+                // 显示点击任意位置返回的提示
+                outtextxy(350, 500, _T("点击任意位置返回"));
+
+                // 强制刷新屏幕
+                FlushBatchDraw();
+
+                // 等待用户点击任意位置
+                ExMessage msg;
+                while (true)
+                {
+                    getmessage(&msg, EX_MOUSE);
+                    if (msg.message == WM_LBUTTONDOWN)
+                    {
+                        cleardevice();
+                        break;
+                    }
+                }
+            }
+
+            break;
             case 2:
 
                 break;

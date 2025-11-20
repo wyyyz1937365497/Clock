@@ -17,11 +17,6 @@ public:
 	Dial(int x, int y, int r);
 	void refresh();
 };
-// class Bottom{
-//	string text;
-//
-// };
-
 class Pin
 {
 	int x;
