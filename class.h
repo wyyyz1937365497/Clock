@@ -17,10 +17,10 @@ public:
 	Dial(int x, int y, int r);
 	void refresh();
 };
-//class Bottom{
+// class Bottom{
 //	string text;
-//	
-//};
+//
+// };
 
 class Pin
 {
@@ -31,15 +31,15 @@ class Pin
 
 public:
 	int angle;
-	void write_text(double anglein,int num);
+	void write_text(double anglein, int num);
 	void point_to_dgree(double angle, int time);
 	void changr_color();
 	Pin(int x, int y, int len, COLORREF color);
 };
 double norm_angle(double a);
 bool is_angle_between(double angle, double start, double end);
-void sdf_pie_mt(int cx, int cy, int r, double start_deg, double end_deg, COLORREF fill_color, int aa_width=1);
-void update_to_screen(IMAGE* hidden);
+void sdf_pie_mt(int cx, int cy, int r, double start_deg, double end_deg, COLORREF fill_color, int aa_width = 1);
+void update_to_screen(IMAGE *hidden);
 
 class Button
 {
@@ -54,7 +54,7 @@ class Button
 	bool isHovered;
 
 public:
-	Button(int x, int y, int width, int height, const std::string& text, std::function<void()> onClick);
+	Button(int x, int y, int width, int height, const std::string &text, std::function<void()> onClick);
 	void draw();
 	bool checkClick(int mouseX, int mouseY);
 	void checkHover(int mouseX, int mouseY);
@@ -62,7 +62,8 @@ public:
 };
 
 // 添加TextInput类用于处理文本输入
-class TextInput {
+class TextInput
+{
 private:
 	int x, y, width, height;
 	string text;
@@ -70,33 +71,34 @@ private:
 	string placeholder;
 
 public:
-	TextInput(int x, int y, int width, int height, const string& placeholder);
+	TextInput(int x, int y, int width, int height, const string &placeholder);
 	void draw();
 	void handleInput(char inputChar);
 	void handleClick(int mouseX, int mouseY);
 	string getText() const;
-	void setText(const string& newText);
+	void setText(const string &newText);
 	bool isInside(int mouseX, int mouseY) const;
 };
 
 // 添加Alarm类用于表示闹钟对象
-class Alarm {
+class Alarm
+{
 private:
 	string name;
 	int hour;
 	int minute;
-	int second; // 新增：秒字段
-	int level; // 闹钟等级 1-3
+	int second;		// 新增：秒字段
+	int level;		// 闹钟等级 1-3
 	bool triggered; // 用于跟踪闹钟是否已触发
 
 public:
-	Alarm(const string& name, int hour, int minute, int second, int level);
+	Alarm(const string &name, int hour, int minute, int second, int level);
 	string getName() const;
 	int getHour() const;
 	int getMinute() const;
 	int getSecond() const; // 新增：获取秒
 	int getLevel() const;
-	void setName(const string& newName);
+	void setName(const string &newName);
 	void setHour(int newHour);
 	void setMinute(int newMinute);
 	void setSecond(int newSecond); // 新增：设置秒

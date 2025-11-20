@@ -1,4 +1,4 @@
-#include <graphics.h>
+﻿#include <graphics.h>
 #include <iostream>
 #include <conio.h>
 #include "class.h"
@@ -26,7 +26,7 @@ vector<Alarm> alarms;
 void showAddAlarmDialog();
 void showDeleteAlarmDialog(int alarmIndex);
 void checkAndTriggerAlarms();
-void sendToastNotification(const string& alarmName);
+void sendToastNotification(const string &alarmName);
 
 int main()
 {
@@ -37,51 +37,50 @@ int main()
     Pin second(400, 400, 300, RGB(255, 0, 0));
     Pin minute(400, 400, 225, RGB(0, 0, 255));
     Pin hour(400, 400, 150, RGB(0, 255, 0));
-    
+
     // 初始化COM
     CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    
+
     // 创建切换按钮
-    Button toggleButton(10, 10, 80, 40, "切换", []() {
-        issdf = !issdf;
-    });
-    
+    Button toggleButton(10, 10, 80, 40, "切换", []()
+                        { issdf = !issdf; });
+
     // 创建添加闹钟按钮 (+号)
-    Button addAlarmButton(820, 20, 40, 40, "+", []() {
-        showAddAlarmDialog();
-    });
-    
+    Button addAlarmButton(820, 20, 40, 40, "+", []()
+                          { showAddAlarmDialog(); });
+
     cleardevice();
     // 初始绘制按钮
     toggleButton.draw();
     addAlarmButton.draw();
-    
+
     while (!_kbhit())
     {
         // 绘制按钮
         toggleButton.draw();
         addAlarmButton.draw();
-        
+
         // 显示issdf状态
         TCHAR stateStr[32] = {};
         _stprintf_s(stateStr, _countof(stateStr), _T("issdf: %s"), issdf ? _T("true ") : _T("false"));
         outtextxy(100, 20, stateStr);
-        
+
         // 显示闹钟标题
         TCHAR alarmTitle[32] = {};
         _stprintf_s(alarmTitle, _countof(alarmTitle), _T("闹钟列表"));
         outtextxy(820, 70, alarmTitle);
-        
+
         // 显示闹钟列表
-        for (size_t i = 0; i < alarms.size() && i < 10; i++) {
-            string alarmInfo = alarms[i].getName() + " " + 
-                              to_string(alarms[i].getHour()) + ":" + 
-                              (alarms[i].getMinute() < 10 ? "0" : "") + 
-                              to_string(alarms[i].getMinute()) + ":" +
-                              (alarms[i].getSecond() < 10 ? "0" : "") + 
-                              to_string(alarms[i].getSecond()) +
-                              " (等级:" + to_string(alarms[i].getLevel()) + ")";
-            
+        for (size_t i = 0; i < alarms.size() && i < 10; i++)
+        {
+            string alarmInfo = alarms[i].getName() + " " +
+                               to_string(alarms[i].getHour()) + ":" +
+                               (alarms[i].getMinute() < 10 ? "0" : "") +
+                               to_string(alarms[i].getMinute()) + ":" +
+                               (alarms[i].getSecond() < 10 ? "0" : "") +
+                               to_string(alarms[i].getSecond()) +
+                               " (等级:" + to_string(alarms[i].getLevel()) + ")";
+
             TCHAR wAlarmInfo[256] = {};
 #ifdef UNICODE
             MultiByteToWideChar(CP_ACP, 0, alarmInfo.c_str(), -1, wAlarmInfo, 256);
@@ -90,10 +89,10 @@ int main()
 #endif
             outtextxy(820, 100 + (int)i * 25, wAlarmInfo);
         }
-        
+
         // 检查是否有闹钟需要触发
         checkAndTriggerAlarms();
-        
+
         // 处理鼠标消息
         ExMessage msg;
         while (peekmessage(&msg, EX_MOUSE))
@@ -106,22 +105,24 @@ int main()
                     cout << "按钮被点击" << endl;
                     cleardevice();
                 }
-                
+
                 if (addAlarmButton.checkClick(msg.x, msg.y))
                 {
-                    cout<<"创建闹重按钮"<<endl;
-                    //showAddAlarmDialog();
+                    cout << "创建闹重按钮" << endl;
+                    // showAddAlarmDialog();
                 }
-                
+
                 // 检查闹钟列表项点击
-                for (size_t i = 0; i < alarms.size() && i < 10; i++) {
+                for (size_t i = 0; i < alarms.size() && i < 10; i++)
+                {
                     int itemX = 820;
                     int itemY = 100 + (int)i * 25;
                     int itemWidth = 160;
                     int itemHeight = 20;
-                    
+
                     if (msg.x >= itemX && msg.x <= itemX + itemWidth &&
-                        msg.y >= itemY && msg.y <= itemY + itemHeight) {
+                        msg.y >= itemY && msg.y <= itemY + itemHeight)
+                    {
                         showDeleteAlarmDialog(i);
                         break;
                     }
@@ -151,10 +152,10 @@ int main()
             {
                 dial.refresh();
             }
-            //sdf_pie_mt(400,400,300,0,90,RED);
-             second.point_to_dgree(sec_angle, t.tm_sec);
-             minute.point_to_dgree(min_angle + (0.1 * t.tm_sec), t.tm_min);
-             hour.point_to_dgree(hour_angle + (0.5 * t.tm_min) + (t.tm_sec / 120.0), t.tm_hour);
+            // sdf_pie_mt(400,400,300,0,90,RED);
+            second.point_to_dgree(sec_angle, t.tm_sec);
+            minute.point_to_dgree(min_angle + (0.1 * t.tm_sec), t.tm_min);
+            hour.point_to_dgree(hour_angle + (0.5 * t.tm_min) + (t.tm_sec / 120.0), t.tm_hour);
         }
 
         Sleep(100); // 从1000改为100以提高检查频率，支持秒级精度
@@ -166,62 +167,70 @@ int main()
 }
 
 // 检查并触发闹钟
-void checkAndTriggerAlarms() {
+void checkAndTriggerAlarms()
+{
     time_t now;
     time(&now);
     struct tm t;
     localtime_s(&t, &now);
-    
+
     int currentHour = t.tm_hour;
     int currentMinute = t.tm_min;
     int currentSecond = t.tm_sec;
-    
+
     // 遍历所有闹钟
-    for (size_t i = 0; i < alarms.size(); i++) {
+    for (size_t i = 0; i < alarms.size(); i++)
+    {
         // 检查时间是否匹配且闹钟尚未触发
-        if (alarms[i].getHour() == currentHour && 
-            alarms[i].getMinute() == currentMinute && 
+        if (alarms[i].getHour() == currentHour &&
+            alarms[i].getMinute() == currentMinute &&
             alarms[i].getSecond() == currentSecond &&
-            !alarms[i].isTriggered()) {
+            !alarms[i].isTriggered())
+        {
             // 标记闹钟已触发
             alarms[i].setTriggered(true);
             // 触发闹钟通知
             sendToastNotification(alarms[i].getName());
         }
         // 如果时间不匹配，则重置触发状态
-        else if (alarms[i].getHour() != currentHour || 
+        else if (alarms[i].getHour() != currentHour ||
                  alarms[i].getMinute() != currentMinute ||
-                 alarms[i].getSecond() != currentSecond) {
+                 alarms[i].getSecond() != currentSecond)
+        {
             alarms[i].setTriggered(false);
         }
     }
 }
 
 // 发送Windows Toast通知
-void sendToastNotification(const string& alarmName) {
-    try {
+void sendToastNotification(const string &alarmName)
+{
+    try
+    {
         // 构造Toast通知XML
         string xml = "<toast>"
                      "<visual>"
                      "<binding template='ToastGeneric'>"
                      "<text>闹钟提醒</text>"
-                     "<text>闹钟 \"" + alarmName + "\" 时间到了!</text>"
-                     "</binding>"
-                     "</visual>"
-                     "</toast>";
-        
+                     "<text>闹钟 \"" +
+                     alarmName + "\" 时间到了!</text>"
+                                 "</binding>"
+                                 "</visual>"
+                                 "</toast>";
+
         // 创建XML文档
         XmlDocument doc;
         doc.LoadXml(winrt::to_hstring(xml));
-        
+
         // 创建Toast通知
         ToastNotification toast(doc);
-        
+
         // 创建通知管理器并显示通知
         ToastNotifier notifier = ToastNotificationManager::CreateToastNotifier(L"ClockApp");
         notifier.Show(toast);
     }
-    catch (...) {
+    catch (...)
+    {
         // 如果无法发送Toast通知，则在控制台输出信息
         cout << "闹钟 \"" << alarmName << "\" 时间到了!" << endl;
     }
