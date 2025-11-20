@@ -1,4 +1,4 @@
-#include "class.h"
+﻿#include "class.h"
 #include "globals.h"
 #include <graphics.h>
 #include <conio.h>
