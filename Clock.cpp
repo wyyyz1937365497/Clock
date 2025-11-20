@@ -99,7 +99,7 @@ int main()
             if (msg.message == WM_LBUTTONDOWN)
             {
                 // 检查按钮点击
-                if (toggleButton->checkClick(msg.x, msg.y))
+                if (toggleButton.checkClick(msg.x, msg.y))
                 {
                     cout << "切换按钮被点击" << endl;
                 }
@@ -128,8 +128,8 @@ int main()
             else if (msg.message == WM_MOUSEMOVE)
             {
                 // 检查鼠标悬停
-                toggleButton->checkHover(msg.x, msg.y);
-                addAlarmButton->checkHover(msg.x, msg.y);
+                toggleButton.checkHover(msg.x, msg.y);
+                addAlarmButton.checkHover(msg.x, msg.y);
             }
         }
 
@@ -158,41 +158,12 @@ int main()
             hour.point_to_dgree(hour_angle + (0.5 * t.tm_min) + (t.tm_sec / 120.0), t.tm_hour);
         }
 
-    // 绘制按钮
-    toggleButton->draw();
-    addAlarmButton->draw();
-
-    // 显示issdf状态
-    TCHAR stateStr[32] = {};
-    _stprintf_s(stateStr, _countof(stateStr), _T("issdf: %s"), issdf ? _T("true ") : _T("false"));
-    outtextxy(100, 20, stateStr);
-
-    // 显示闹钟标题
-    TCHAR alarmTitle[32] = {};
-    _stprintf_s(alarmTitle, _countof(alarmTitle), _T("闹钟列表"));
-    outtextxy(820, 70, alarmTitle);
-
-    // 显示闹钟列表
-    for (size_t i = 0; i < alarms.size() && i < 10; i++)
-    {
-        string alarmInfo = alarms[i].getName() + " " +
-                           to_string(alarms[i].getHour()) + ":" +
-                           (alarms[i].getMinute() < 10 ? "0" : "") +
-                           to_string(alarms[i].getMinute()) + ":" +
-                           (alarms[i].getSecond() < 10 ? "0" : "") +
-                           to_string(alarms[i].getSecond()) +
-                           " (等级:" + to_string(alarms[i].getLevel()) + ")";
-
-        TCHAR wAlarmInfo[256] = {};
-#ifdef UNICODE
-        MultiByteToWideChar(CP_ACP, 0, alarmInfo.c_str(), -1, wAlarmInfo, 256);
-#else
-        _tcscpy_s(wAlarmInfo, alarmInfo.c_str());
-#endif
-        outtextxy(820, 100 + (int)i * 25, wAlarmInfo);
+        // 绘制按钮
+        toggleButton.draw();
+        addAlarmButton.draw();
+        Sleep(100);
     }
 }
-
 // 检查并触发闹钟
 void checkAndTriggerAlarms()
 {
@@ -218,16 +189,16 @@ void checkAndTriggerAlarms()
             alarms[i].setTriggered(true);
             switch (alarms[i].getLevel())
             {
-                case 1:
+            case 1:
 
-                    break;
-                case 2:
+                break;
+            case 2:
 
-                    break;
-                case 3:
+                break;
+            case 3:
 
-                    break;
-                
+                break;
+
             default:
                 break;
             }
@@ -242,4 +213,3 @@ void checkAndTriggerAlarms()
         }
     }
 }
-
