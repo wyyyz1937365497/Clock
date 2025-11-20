@@ -1,4 +1,4 @@
-#include <graphics.h>
+﻿#include <graphics.h>
 #include <iostream>
 #include <conio.h>
 #include "class.h"
@@ -6,18 +6,7 @@
 #include <time.h>
 #include <vector>
 
-// 添加Windows API相关头文件
-#include <windows.h>
-#include <winrt/Windows.Data.Xml.Dom.h>
-#include <winrt/Windows.UI.Notifications.h>
-#include <winrt/Windows.ApplicationModel.Background.h>
-#include <winrt/Windows.Foundation.h>
-
 using namespace std;
-using namespace winrt;
-using namespace Windows::Data::Xml::Dom;
-using namespace Windows::UI::Notifications;
-
 // 定义全局变量
 bool issdf = false;
 vector<Alarm> alarms;
